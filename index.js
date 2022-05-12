@@ -1,16 +1,18 @@
 const express = require('express')
 const dotenv = require('dotenv')
-dotenv.config()
 const cors = require('cors');
 const PORT = process.env.PORT || 4000;
 const INDEX = '/index.html';
 const mongoose = require('mongoose')
-mongoose.connect(MongoDBConnectionString);
-
 const app = express()
+const socket = require('socket.io');
+
+const server = app.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}...`));
+
+mongoose.connect(MongoDBConnectionString);
+dotenv.config()
 app.use((_req, res) => res.sendFile(INDEX, { root: __dirname }))
 app.use(cors());
-const server = app.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}...`));
 const rooms = new mongoose.Schema({
     roomnames : Array
   }, {collection: 'RoomNames'});
@@ -21,7 +23,6 @@ connection.once('open', () => {
 });
 
 // socket server
-const socket = require('socket.io');
 const io = socket(server);
 io.on('connection', (socket) => {
     console.log("socket", socket);
@@ -37,7 +38,6 @@ io.on('connection', (socket) => {
         const currRooms= await Rooms.find({roomnames: String(room)}).limit(1);
         console.log("roomDetails",currRooms)
         if (currRooms.length>=1) {
-            //console.log("whatever")
             socket.emit('create_new_room');
         }
         else {
